@@ -20,6 +20,26 @@ def GetRunNumber(file1, file2):
     sys.exit(-1)
 
 
+# Go through all directories recursively, starting from run_[number]/Pixel.
+# The function returns a list of all TDirectory/TDirectoryFile objects.
+def GetDirectories(file, run):
+    directories = [run + "/Pixel"]
+
+    for dir in directories:
+        keys = file.Get(dir).GetListOfKeys()
+        itr = iter(keys)
+        for i in itr:
+            path = dir + "/" + i.GetName()
+            if not file.Get(path):
+                logging.warning("Cannot retrieve %s in directory %s. Pointer points nowhere" % (path, dir))
+                continue
+            if file.Get(path).ClassName() == "TDirectoryFile":
+                directories.append(path)
+            if file.Get(path).ClassName() == "TDirectory":
+                directories.append(path)
+    return directories
+
+
 # ==========================================================
 #  M A I N   F U N C T I O N
 # ==========================================================
@@ -57,6 +77,15 @@ if __name__ == "__main__":
     file2 = TFile.Open(args.input2)
 
     run = GetRunNumber(file1, file2)
+
+
+    # ======================================================
+    # First check if directory structure is identical
+    # ======================================================
+    directories1 = GetDirectories(file1, run)
+    logging.info("Found %s directories in file %s" % (len(directories1), file1.GetName()))
+    directories2 = GetDirectories(file2, run)
+    logging.info("Found %s directories in file %s" % (len(directories2), file2.GetName()))
 
     if args.ignore:
         logging.info("Warnings have been ignored, please check log file '%s' for details." % logfile)
