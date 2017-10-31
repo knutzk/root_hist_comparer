@@ -34,4 +34,8 @@ if __name__ == "__main__":
     file1 = TFile.Open(args.input1)
     file2 = TFile.Open(args.input2)
 
+    if args.ignore:
+        logging.info("Warnings have been ignored, please check log file '%s' for details." % logfile)
+    logging.info("Exiting without errors")
+
 # end of file
