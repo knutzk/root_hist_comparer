@@ -1,6 +1,20 @@
 #!/usr/bin/python
 
 if __name__ == "__main__":
+    # Set up the logging package (logging to file and streaming to console)
+    import logging
+    logfile = 'compare.log'
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        filename='./%s' % logfile,
+                        filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(levelname)-8s %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
+
     # Parse arguments
     import argparse
     parser = argparse.ArgumentParser()
