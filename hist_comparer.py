@@ -40,6 +40,31 @@ def GetDirectories(file, run):
     return directories
 
 
+# Compare two lists (either of histograms or directories).
+def CompareLists(list1, list2):
+    # Create intersection and complementary sets
+    intersect = set(list1).intersection(list2)
+    compl1 = set(list1) - intersect
+    compl2 = set(list2) - intersect
+
+    comparison_ok = True
+    if len(compl1) > 0 or len(compl2) > 0:
+        logging.warning("Files do not have identical structure (directories, histograms)!")
+        comparison_ok = False
+        if len(compl1) > 0:
+            logging.warning("Only found in input file 1 (%s):" % len(compl1))
+            for dir in sorted(compl1):
+                logging.warning("\t--> " + dir)
+        if len(compl2) > 0:
+            logging.warning("Only found in input file 2 (%s):" % len(compl2))
+            for dir in sorted(compl2):
+                logging.warning("\t--> " + dir)
+    if comparison_ok:
+        logging.debug("Files have identical structure. Continue with next step ...")
+        return True
+    return False
+
+
 # ==========================================================
 #  M A I N   F U N C T I O N
 # ==========================================================
@@ -86,6 +111,10 @@ if __name__ == "__main__":
     logging.info("Found %s directories in file %s" % (len(directories1), file1.GetName()))
     directories2 = GetDirectories(file2, run)
     logging.info("Found %s directories in file %s" % (len(directories2), file2.GetName()))
+
+    if not CompareLists(directories1, directories2) and not args.ignore:
+        logging.error("Found warnings. To ignore them, use option '--ignore'.")
+        sys.exit(-1)
 
     if args.ignore:
         logging.info("Warnings have been ignored, please check log file '%s' for details." % logfile)
