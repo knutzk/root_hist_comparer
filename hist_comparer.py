@@ -87,6 +87,70 @@ def CompareLists(list1, list2):
     return False
 
 
+# Make a basic comparison of two histogram objects. This checks the following
+# criteria: histogram title, axis titles (X, Y, Z), number of bins (X, Y, Z),
+# number of total entries.
+def CompareHistograms(file1, file2, histname):
+    hist1 = file1.Get(histname)
+    hist2 = file2.Get(histname)
+    if not hist1:
+        return
+    if not hist2:
+        return
+    found_error = False
+    if hist1.GetName() != hist2.GetName():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Objects names differ: %s | %s" % (hist1.GetName(), hist1.GetName()))
+    if hist1.GetTitle() != hist2.GetTitle():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Histogram titles differ: %s | %s" % (hist1.GetTitle(), hist2.GetTitle()))
+    if hist1.ClassName() != hist2.ClassName():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Class names differ: %s | %s" % (hist1.ClassName(), hist2.ClassName()))
+    if hist1.GetNbinsX() != hist2.GetNbinsX():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Value for NbinsX differ: %s | %s" % (hist1.GetNbinsX(), hist2.GetNbinsX()))
+    if hist1.GetNbinsY() != hist2.GetNbinsY():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Value for NbinsY differ: %s | %s" % (hist1.GetNbinsY(), hist2.GetNbinsY()))
+    if hist1.GetNbinsZ() != hist2.GetNbinsZ():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Value for NbinsZ differ: %s | %s" % (hist1.GetNbinsZ(), hist2.GetNbinsZ()))
+    if hist1.GetXaxis().GetTitle() != hist2.GetXaxis().GetTitle():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> X axis titles differ: %s | %s" % (hist1.GetXaxis().GetTitle(), hist2.GetXaxis().GetTitle()))
+    if hist1.GetYaxis().GetTitle() != hist2.GetYaxis().GetTitle():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Y axis titles differ: %s | %s" % (hist1.GetYaxis().GetTitle(), hist2.GetYaxis().GetTitle()))
+    if hist1.GetZaxis().GetTitle() != hist2.GetZaxis().GetTitle():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Z axis titles differ: %s | %s" % (hist1.GetZaxis().GetTitle(), hist2.GetZaxis().GetTitle()))
+    if hist1.GetEffectiveEntries() != hist2.GetEffectiveEntries():
+        if not found_error:
+            logging.warning("Differences found in: " + histname)
+            found_error = True
+        logging.debug("\t--> Total entries differ: %s | %s" % (hist1.GetEffectiveEntries(), hist2.GetEffectiveEntries()))
+    return not found_error
+
+
 # ==========================================================
 #  M A I N   F U N C T I O N
 # ==========================================================
@@ -150,6 +214,24 @@ if __name__ == "__main__":
     if not CompareLists(hists1, hists2) and not args.ignore:
         logging.error("Found warnings. To ignore them, use option '--ignore'.")
         sys.exit(-1)
+
+
+    # ======================================================
+    # Now make a histogram-by-histogram comparison (for the intersection).
+    # ======================================================
+    intersect = set(hists1).intersection(hists2)
+    logging.info("The two files have %s common histograms. Comparing histograms now ..." % len(intersect))
+
+    for histname in sorted(intersect):
+        logging.debug("Checking histogram %s ..." % histname)
+        found_error = False
+        # Make a general comparison (titles, axes etc.).
+        if not CompareHistograms(file1, file2, histname):
+            found_error = True
+        if found_error and not args.ignore:
+            logging.error("Found warnings. To ignore them, use option '--ignore'.")
+            sys.exit(-1)
+
 
     if args.ignore:
         logging.info("Warnings have been ignored, please check log file '%s' for details." % logfile)
