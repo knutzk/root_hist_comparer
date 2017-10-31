@@ -151,6 +151,32 @@ def CompareHistograms(file1, file2, histname):
     return not found_error
 
 
+# Make a bin-by-bin comparison for two histogram objects.
+def CompareHistogramBins(file1, file2, histname):
+    hist1 = file1.Get(histname)
+    hist2 = file2.Get(histname)
+    if not hist1:
+        return
+    if not hist2:
+        return
+    # Make sure that bin numbers are not changed
+    if hist1.GetNbinsX() != hist2.GetNbinsX() or hist1.GetNbinsY() != hist2.GetNbinsY() or hist1.GetNbinsZ() != hist2.GetNbinsZ():
+        logging.debug("\t--> Bin numbers changed, skipping bin-by-bin comparison")
+        return False
+    # Now do the actual bin-by-bin comparison
+    found_error = False
+    for x in range(0, hist1.GetNbinsX() + 1):
+        for y in range(0, hist1.GetNbinsY() + 1):
+            for z in range(0, hist1.GetNbinsZ() + 1):
+                lin_bin_number = hist1.GetBin(x, y, z)
+                if hist1.GetBinContent(lin_bin_number) != hist2.GetBinContent(lin_bin_number):
+                    if not found_error:
+                        logging.warning("Differences found in: " + histname)
+                        found_error = True
+                    logging.debug("\t--> Bin contents differ for bin {0}, {1}, {2}: {3} | {4}".format(x, y, z, hist1.GetBinContent(lin_bin_number), hist2.GetBinContent(lin_bin_number)))
+    return not found_error
+
+
 # ==========================================================
 #  M A I N   F U N C T I O N
 # ==========================================================
@@ -227,6 +253,9 @@ if __name__ == "__main__":
         found_error = False
         # Make a general comparison (titles, axes etc.).
         if not CompareHistograms(file1, file2, histname):
+            found_error = True
+        # Make a bin-by-bin comparison if option '--detailed' was given.
+        if args.detailed and not CompareHistogramBins(file1, file2, histname):
             found_error = True
         if found_error and not args.ignore:
             logging.error("Found warnings. To ignore them, use option '--ignore'.")
