@@ -40,6 +40,28 @@ def GetDirectories(file, run):
     return directories
 
 
+# Get a list of all histograms, given a list of directories to search trough.
+def GetHistograms(file, directories):
+    histograms = []
+    for dir in directories:
+        if not file.Get(dir):
+            continue
+        keys = file.Get(dir).GetListOfKeys()
+        itr = iter(keys)
+        for i in itr:
+            path = dir + "/" + i.GetName()
+            if not file.Get(path):
+                continue
+            if file.Get(path).ClassName() == "TDirectory":
+                continue
+            if file.Get(path).ClassName() == "TDirectoryFile":
+                continue
+            if file.Get(path).ClassName() == "TTree":
+                continue
+            histograms.append(path)
+    return histograms
+
+
 # Compare two lists (either of histograms or directories).
 def CompareLists(list1, list2):
     # Create intersection and complementary sets
@@ -113,6 +135,19 @@ if __name__ == "__main__":
     logging.info("Found %s directories in file %s" % (len(directories2), file2.GetName()))
 
     if not CompareLists(directories1, directories2) and not args.ignore:
+        logging.error("Found warnings. To ignore them, use option '--ignore'.")
+        sys.exit(-1)
+
+
+    # ======================================================
+    # Then check if all histograms are found in both files.
+    # ======================================================
+    hists1 = GetHistograms(file1, directories1)
+    logging.info("Found %s histograms in file %s" % (len(hists1), file1.GetName()))
+    hists2 = GetHistograms(file2, directories2)
+    logging.info("Found %s histograms in file %s" % (len(hists2), file2.GetName()))
+
+    if not CompareLists(hists1, hists2) and not args.ignore:
         logging.error("Found warnings. To ignore them, use option '--ignore'.")
         sys.exit(-1)
 
