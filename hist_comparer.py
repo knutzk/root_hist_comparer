@@ -1,8 +1,30 @@
 #!/usr/bin/python
+import logging
+import sys
 
+def GetRunNumber(file1, file2):
+    run_nr1 = ""
+    run_nr2 = ""
+
+    objects = file1.GetListOfKeys()
+    for entry in objects:
+        run_nr1 = entry.GetName()
+        break
+    objects = file2.GetListOfKeys()
+    for entry in objects:
+        run_nr2 = entry.GetName()
+        break
+    if run_nr1 == run_nr2:
+        return run_nr1
+    logging.error("could not detect run number")
+    sys.exit(-1)
+
+
+# ==========================================================
+#  M A I N   F U N C T I O N
+# ==========================================================
 if __name__ == "__main__":
     # Set up the logging package (logging to file and streaming to console)
-    import logging
     logfile = 'compare.log'
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)-8s %(message)s',
@@ -33,6 +55,8 @@ if __name__ == "__main__":
 
     file1 = TFile.Open(args.input1)
     file2 = TFile.Open(args.input2)
+
+    run = GetRunNumber(file1, file2)
 
     if args.ignore:
         logging.info("Warnings have been ignored, please check log file '%s' for details." % logfile)
