@@ -24,6 +24,11 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--ignore", help="ignore all sorts of warnings and continue running", action="store_true")
     args = parser.parse_args()
 
+    if args.ignore:
+        logging.info("Option '--ignore' was given, so any warnings will be ignored.")
+    if args.detailed:
+        logging.info("Option '--detailed' was given, so histograms will be checked bin by bin.")
+
     from ROOT import TFile, TDirectory
 
     file1 = TFile.Open(args.input1)
